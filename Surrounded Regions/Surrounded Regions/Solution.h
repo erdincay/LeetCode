@@ -1,92 +1,138 @@
+#include <unordered_set>
+#include <vector>
+#include <iostream>
+#include <memory>
+
+using namespace std;
+
 class node
 {
 private:
 	char val_;
-	bool * aliveMem_;
-	bool asked_;
+	bool edge_;
 	vector<node *> neighbors_;
 
 private:
-	void setnodeval(char val) {
-		val_ = val;
-	}
-
-	void setAsked(bool val) {
-		asked_ = val;
-	}
-
-	void setAliveMem(bool val) {
-		if(aliveMem_ == NULL) {
-			aliveMem_ = new bool(val);
-		}
-		else {
-			*aliveMem_ = val;
-		}
+	void setEdgeNode(bool val)
+	{
+		edge_ = val;
 	}
 
 public:
-	node(char val) {
+	explicit node(char val)
+	{
 		val_ = val;
-		asked_ = false;
-		aliveMem_ = NULL;
+		edge_ = false;
 		neighbors_.clear();
 	}
 
-	~node() {
-		delete aliveMem_;
+	~node()
+	{
 	}
 
-	char getnodeval() {
+	char getnodeval()
+	{
 		return val_;
 	}
 
-	bool getAsked() {
-		return asked_;
+	void setnodeval(char val)
+	{
+		val_ = val;
 	}
 
-	void addneighbor(node * val) {
-		neighbors_.push_back(val);
-		if(val == NULL) {
-			setAliveMem(true);
+	void addneighbor(node* val)
+	{
+		if (val == nullptr)
+		{
+			setEdgeNode(true);
+		}
+		else
+		{
+			neighbors_.push_back(val);
 		}
 	}
 
-	bool alive(node * request) {
-		if(aliveMem_ != NULL) {
-			return *aliveMem_;
-		}
-
-		bool ret = false;
-		setAsked(true);
-		for(vector<node *>::iterator it = neighbors_.begin(); it != neighbors_.end(); it++)	{
-			if(*it == NULL) {
-				ret = true;
-				break;
+	bool beConnected(unordered_set<node *> partition)
+	{
+		for (auto neighbor : neighbors_)
+		{
+			if (getnodeval() == neighbor->getnodeval() && partition.count(neighbor) > 0)
+			{
+				return true;
 			}
-
-			if((*it != request) && (!(*it)->getAsked()) && ((*it)->getnodeval() == getnodeval())) {
-				if((*it)->alive(this)) {
-					ret = true;
-					break;
-				}
-			} 
 		}
 
-		setAliveMem(ret);
-		//setAsked(false);
+		return false;
+	}
+
+	vector<pair<unordered_set<node *>, bool>> assign(vector<pair<unordered_set<node *>, bool>> partitions)
+	{
+		unordered_set<size_t> indexs;
+		for (int IDX = 0; IDX < partitions.size(); ++IDX)
+		{
+			if(beConnected(partitions[IDX].first))
+			{
+				indexs.insert(IDX);
+			}
+		}
+
+		auto new_set = unordered_set<node *>({ this });
+		auto alive = edge_;
+		if (indexs.empty())
+		{
+			partitions.push_back(make_pair<unordered_set<node *>, bool>(move(new_set), move(alive)));
+			return partitions;
+		}
+
+		vector<pair<unordered_set<node *>, bool>> ret;
+		for (int IDX = 0; IDX < partitions.size(); ++IDX)
+		{
+			if (indexs.count(IDX) > 0)
+			{
+				if (alive && !partitions[IDX].second)
+				{
+					for (auto node : partitions[IDX].first)
+					{
+						node->setEdgeNode(true);
+					}
+				}
+
+				if (!alive && partitions[IDX].second)
+				{
+					for (auto node : new_set)
+					{
+						node->setEdgeNode(true);
+					}
+				}
+
+				alive |= partitions[IDX].second;
+				new_set.insert(partitions[IDX].first.begin(), partitions[IDX].first.end());
+			}
+			else
+			{
+				ret.push_back(partitions[IDX]);
+			}
+		}
+
+		ret.push_back(make_pair<unordered_set<node *>, bool>(move(new_set), move(alive)));
+
 		return ret;
 	}
 };
 
+
 class Solution
 {
 public:
-	void solve(vector<vector<char>> &board) {
+	void solve(vector<vector<char>>& board)
+	{
 		//init nodes
 		vector<vector<node>> node_board;
-		for(int l=0; l<board.size(); l++) {
+		for (int l = 0; l < board.size(); l++)
+		{
 			vector<node> node_line;
-			for(int r=0; r<board[l].size(); r++) {
+			for (int r = 0; r < board[l].size(); r++)
+			{
 				node nd(board[l][r]);
 				node_line.push_back(nd);
 			}
@@ -94,31 +140,57 @@ public:
 		}
 
 		//init nodes neighbor relation
-		for(int l=0; l<node_board.size(); l++) {
-			for(int r=0; r<node_board[l].size(); r++) {
-				node_board[l][r].addneighbor(getNode(l-1,r,node_board));
-				node_board[l][r].addneighbor(getNode(l+1,r,node_board));
-				node_board[l][r].addneighbor(getNode(l,r-1,node_board));
-				node_board[l][r].addneighbor(getNode(l,r+1,node_board));
+		for (int l = 0; l < node_board.size(); l++)
+		{
+			for (int r = 0; r < node_board[l].size(); r++)
+			{
+				node_board[l][r].addneighbor(getNode(l - 1, r, node_board));
+				node_board[l][r].addneighbor(getNode(l + 1, r, node_board));
+				node_board[l][r].addneighbor(getNode(l, r - 1, node_board));
+				node_board[l][r].addneighbor(getNode(l, r + 1, node_board));
 			}
 		}
 
-		for(int l=0; l<node_board.size(); l++) {
-			for(int r=0; r<node_board[l].size(); r++) {
-				if((node_board[l][r].getnodeval() == 'O') && (node_board[l][r].alive(NULL) == false)) {
-					board[l][r] = 'X';
+		//partition every node
+		vector<pair<unordered_set<node *>, bool>> partitions;
+		for (int l = 0; l < node_board.size(); l++)
+		{
+			for (int r = 0; r < node_board[l].size(); r++)
+			{
+				partitions = node_board[l][r].assign(partitions);
+			}
+		}
+
+		//change the dead node
+		for (auto const & partition : partitions)
+		{
+			if (!partition.second && (*partition.first.begin())->getnodeval() == 'O')
+			{
+				for (auto node : partition.first)
+				{
+					node->setnodeval('X');
 				}
+			}
+		}
+
+		//write result
+		for (int l = 0; l < node_board.size(); l++)
+		{
+			for (int r = 0; r < node_board[l].size(); r++)
+			{
+				board[l][r] = node_board[l][r].getnodeval();
 			}
 		}
 	}
 
 private:
-	node * getNode(int line, int row, vector<vector<node>> & node_board) {
-		if(line < 0 || row < 0 || line >= node_board.size() || row >= node_board[line].size()) {
-			return NULL;
+	node* getNode(int line, int row, vector<vector<node>>& node_board)
+	{
+		if (line < 0 || row < 0 || line >= node_board.size() || row >= node_board[line].size())
+		{
+			return nullptr;
 		}
 
 		return &node_board[line][row];
 	}
 };
-
