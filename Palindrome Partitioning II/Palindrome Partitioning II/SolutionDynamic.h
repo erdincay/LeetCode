@@ -1,60 +1,63 @@
 class Solution {
 public:
 	int minCut(string s) {
-		return subStr(s) - 1;
+		return minCuts(s);
 	}
 
 private:
-	bool checkPalindrome(string strPd) {
-		int strLen = strPd.length();
-		if(strLen == 1) {
-			return true;
+	int minCuts(string & s) {
+		//res[] is for minimal cut DP
+		vector<int>res(s.size(), 0);
+		//mp[][] is for palindrome checking DP
+		bool ** mp = new bool*[s.size()];
+		for (int i = 0; i < s.size();i++)
+		{
+			mp[i] = new bool[s.size()];
 		}
 
-		int mid = (strLen / 2) + (strLen % 2);
-
-		int i =0;
-		for(; i<mid; i++)
-		{
-			if(strPd.at(i) != strPd.at(strLen - 1 -i)) {
-				break;
+		//construct the pailndrome checking matrix
+		//  1) matrix[i][j] = true;     if (i==j)                   -- only one char
+		//  2) matrix[i][j] = true;     if (i==j+1) && s[i]==s[j]   -- only two chars
+		//  3) matrix[i][j] = matrix[i+1][j-1];   if s[i]==s[j]     -- more than two chars
+		//
+		//note:  1) and 2) can be combined together
+		for (int i = s.size() - 1; i >= 0; i--) {
+			for (int j = i; j<s.size(); j++) {
+				if ((s[i] == s[j]) && (j - i<2 || mp[i + 1][j - 1])) {
+					mp[i][j] = true;
+				}
+				else {
+					mp[i][j] = false;
+				}
 			}
 		}
-
-		return i == mid;
-	}
-
-	int subStr(string strSrc) {
-		
-		list<string> strList;
-		for (int len=0; len<strSrc.size(); len++)
-		{
-			strList.push_back(strSrc.substr(len,1));
-		}
-
-		for (int len=2; len<=strSrc.size(); len++)
-		{
-			for (list<string>::iterator it = strList.begin(); it != strList.end(); it++)
-			{
-				string newStr = "";
-				list<string>::iterator itt = it;
-				for (int j=0; j<len; j++)
-				{
-					if (itt != strList.end())
-					{
-						newStr += *itt;
-						itt++;
+		//minimal cut dp
+		for (int i = 0; i<s.size(); i++) {
+			//if s[0..i] is palindrome, then no need to cut
+			if (mp[0][i] == true) {
+				res[i] = 0;
+			}
+			else {
+				// if s[0..i] isn't palindrome 
+				// then, for each 0 to i, find a "j" which meets two conditions:
+				//    a) s[j+1..i] are palindrome.
+				//    b) res[j]+1 is minimal   
+				int ms = s.size();
+				for (int j = 0; j<i; j++) {
+					if (mp[j + 1][i] && ms>res[j] + 1) {
+						ms = res[j] + 1;
 					}
 				}
-
-				if (checkPalindrome(newStr))
-				{
-					strList.erase(it,itt);
-					strList.insert(strList.begin(),newStr);
-				}
+				res[i] = ms;
 			}
 		}
 
-		return strList.size();
+		for (int i = 0; i < s.size(); i++)
+		{
+			delete[] mp[i];
+		}
+		delete[] mp;
+
+		return res[s.size() - 1];
 	}
 };

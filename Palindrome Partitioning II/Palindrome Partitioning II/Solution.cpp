@@ -1,8 +1,6 @@
 #include <string>
 #include <iostream>
 #include <vector>
-#include <map>
-#include <list>
 
 using namespace std;
 
@@ -16,7 +14,7 @@ int main(int argc, char* argv[])
 {
 	Solution s;
 
-	cout<<s.minCut("ab");
+	cout<<s.minCut("cdd");
 	cout<<endl;
 
 	system("PAUSE");

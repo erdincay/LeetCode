@@ -1,11 +1,15 @@
+#include <string>
+#include <vector>
+#include <map>
+
 class Solution {
 public:
-	int minCut(string s) {
-		vector<int> out;
+	int minCut(std::string s) {
+		std::vector<int> out;
 		subStr(0,s,out);
 
 		int min = s.size();
-		for (vector<int>::iterator line = out.begin(); line != out.end(); line++) {
+		for (std::vector<int>::iterator line = out.begin(); line != out.end(); line++) {
 			if(*line < min) {
 				min = *line;
 			}
@@ -15,10 +19,10 @@ public:
 	}
 
 private:
-	map<string, bool> mem_;
+	std::map<std::string, bool> mem_;
 
 private:
-	bool checkPalindrome(string strPd) {
+	bool checkPalindrome(std::string strPd) {
 		int strLen = strPd.length();
 		if(strLen == 1) {
 			return true;
@@ -52,10 +56,10 @@ private:
 		}
 	}
 
-	int subStr(int minSubLen, string strSrc, vector <int> & countSub) {
+	int subStr(int minSubLen, std::string strSrc, std::vector <int> & countSub) {
 		int strLen = strSrc.length();
 		int plrLen = 0;
-		string strPlr = "";
+		std::string strPlr = "";
 
 		for(int len = minSubLen + 1; len <= strLen; len++) {
 			if(checkPalindrome(strSrc.substr(0,len))) {
@@ -67,16 +71,16 @@ private:
 
 		if (plrLen > 0)	{
 			if(strLen - plrLen > 0) {
-				vector<int> countLeft;
+				std::vector<int> countLeft;
 				if(subStr(0,strSrc.substr(plrLen),countLeft) > 0) {
-					for (vector<int>::iterator line = countLeft.begin(); line != countLeft.end(); line++) {
+					for (std::vector<int>::iterator line = countLeft.begin(); line != countLeft.end(); line++) {
 						countSub.push_back(*line + 1);
 					}
 				}
 
-				vector<int> countLonger;
+				std::vector<int> countLonger;
 				if(subStr(plrLen, strSrc, countLonger) > 0) {
-					for (vector<int>::iterator line = countLonger.begin(); line != countLonger.end(); line++) {
+					for (std::vector<int>::iterator line = countLonger.begin(); line != countLonger.end(); line++) {
 						countSub.push_back(*line);
 					}
 				}
