@@ -9,9 +9,9 @@ struct coordinate
 	int col_;
 
 	coordinate(int row, int col)
+		:row_(row),
+		col_(col)
 	{
-		row_ = row;
-		col_ = col;
 	}
 };
 
